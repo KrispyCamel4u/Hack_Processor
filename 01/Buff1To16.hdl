@@ -1,0 +1,8 @@
+CHIP Buff1To16 {
+    IN in;
+    OUT out[16];
+
+    PARTS:
+    Buff1To8(in=in,out=out[0..7]);
+    Buff1To8(in=in,out=out[8..15]);
+}

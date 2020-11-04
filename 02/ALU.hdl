@@ -1,0 +1,76 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/02/ALU.hdl
+
+/**
+ * The ALU (Arithmetic Logic Unit).
+ * Computes one of the following functions:
+ * x+y, x-y, y-x, 0, 1, -1, x, y, -x, -y, !x, !y,
+ * x+1, y+1, x-1, y-1, x&y, x|y on two 16-bit inputs, 
+ * according to 6 input bits denoted zx,nx,zy,ny,f,no.
+ * In addition, the ALU computes two 1-bit outputs:
+ * if the ALU output == 0, zr is set to 1; otherwise zr is set to 0;
+ * if the ALU output < 0, ng is set to 1; otherwise ng is set to 0.
+ */
+
+// Implementation: the ALU logic manipulates the x and y inputs
+// and operates on the resulting values, as follows:
+// if (zx == 1) set x = 0        // 16-bit constant
+// if (nx == 1) set x = !x       // bitwise not
+// if (zy == 1) set y = 0        // 16-bit constant
+// if (ny == 1) set y = !y       // bitwise not
+// if (f == 1)  set out = x + y  // integer 2's complement addition
+// if (f == 0)  set out = x & y  // bitwise and
+// if (no == 1) set out = !out   // bitwise not
+// if (out == 0) set zr = 1
+// if (out < 0) set ng = 1
+
+CHIP ALU {
+    IN  
+        x[16], y[16],  // 16-bit inputs        
+        zx, // zero the x input?
+        nx, // negate the x input?
+        zy, // zero the y input?
+        ny, // negate the y input?
+        f,  // compute out = x + y (if 1) or x & y (if 0)
+        no; // negate the out output?
+
+    OUT 
+        out[16], // 16-bit output
+        zr, // 1 if (out == 0), 0 otherwise
+        ng; // 1 if (out < 0),  0 otherwise
+
+    PARTS:
+    //for x and all these operration are cascaded starting from zx and then nx
+    Mux16(a=x, b=false, sel=zx, out=tx1);
+    Not16(in=tx1, out=nottx1);
+    Mux16(a=tx1, b=nottx1, sel=nx, out=tx2);
+    // for y part two operation zy and ny
+    Mux16(a=y, b=false, sel=zy, out=ty1); //zy
+    Not16(in=ty1, out=notty1);              //not ty1
+    Mux16(a=ty1, b=notty1, sel=ny, out=ty2);    //for ny for ty1 and not ty1
+    
+    And16(a=tx2, b=ty2, out=tXandY);  //x&y
+    Add16(a=tx2, b=ty2, out=tXplusY);   //x+y
+    //for f mux
+    Mux16(a=tXandY, b=tXplusY, sel=f, out=tout);
+
+    Not16(in=tout, out=ntout); //not out
+    // for no
+    Mux16(a=tout, b=ntout, sel=no, out=tempout,out=out);
+
+    //And16(a=tempout, b=tempout,out=out);
+
+    /*//redudntant step of not tempout and than again  not to get the out indirectly
+    Not16(in=tempout, out=nottempout);
+    Not16(in=nottempout, out=out);*/
+    
+    // calculating flag signals
+    And16(a=tempout, b=tempout,out[0..14]=tng, out[15]=ng);
+    And16(a=tempout, b=tempout,out[0..7]=t1, out[8..15]=t2);
+    Or8Way(in=t1, out=tzr1);
+    Or8Way(in=t2, out=tzr2);
+    Or(a=tzr2, b=tzr1, out=tzr);
+    Not(in=tzr, out=zr);
+}

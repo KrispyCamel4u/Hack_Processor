@@ -1,0 +1,11 @@
+CHIP Mux2Way16 {
+    IN a[16], b[16], sel;
+    OUT out[16];
+
+    PARTS:
+    Buff1To16(in=sel,out=sel16);
+    Not16(in=sel16, out=nsel);
+    And16(a=nsel, b=a, out=t1);
+    And16(a=sel16, b=b, out=t2);
+    Or16(a=t1, b=t2, out=out);
+}

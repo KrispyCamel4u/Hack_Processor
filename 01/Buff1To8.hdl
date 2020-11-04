@@ -1,0 +1,14 @@
+CHIP Buff1To8 {
+    IN in;
+    OUT out[8];
+
+    PARTS:
+    Buff(in=in,out=out[0]);
+    Buff(in=in,out=out[1]);
+    Buff(in=in,out=out[2]);
+    Buff(in=in,out=out[3]);
+    Buff(in=in,out=out[4]);
+    Buff(in=in,out=out[5]);
+    Buff(in=in,out=out[6]);
+    Buff(in=in,out=out[7]); 
+}
